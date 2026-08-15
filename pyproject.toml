@@ -71,3 +71,6 @@ ignore = [
     "F811",   # Ignorar regla para que las pautas puedan redefinir funciones
     "F821",   # Ignorar nombres no definidos. Eliminar más adelante.
 ]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
