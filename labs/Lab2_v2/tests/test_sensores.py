@@ -1,5 +1,5 @@
-from agroalerta.reporte import contar_riesgos
-from agroalerta.sensores import (
+from labs.Lab2_v2.src.agroalerta.reporte import contar_riesgos
+from labs.Lab2_v2.src.agroalerta.sensores import (
     SensorTemperatura,
     SensorViento,
 )
