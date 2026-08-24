@@ -5,9 +5,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "src"))
 
 
-from agroalerta.datos import cargar_lecturas
-from agroalerta.reporte import contar_riesgos
-from agroalerta.sensores import (
+from labs.Lab2_v2.src.agroalerta.datos import cargar_lecturas
+from labs.Lab2_v2.src.agroalerta.reporte import contar_riesgos
+from labs.Lab2_v2.src.agroalerta.sensores import (
     SensorHumedad,
     SensorTemperatura,
     SensorViento,
