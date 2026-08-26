@@ -11,13 +11,17 @@ from src.meteolab.constantes import RUTA_CSV
 
 def leer_temperaturas(ruta: Path = RUTA_CSV) -> pl.DataFrame:
     """Lee el CSV CRU con sus tipos y valores faltantes."""
-    raise NotImplementedError(
-        "Completen leer_temperaturas antes de ejecutar el programa."
+    lecturas = pl.read_csv(
+        ruta,
+        schema_overrides={
+            "year": pl.Int64,
+            "temperature_c": pl.Float64,
+        },
     )
+    return lecturas
 
 
 def escanear_temperaturas(ruta: Path = RUTA_CSV) -> pl.LazyFrame:
     """Construye una consulta lazy sobre el CSV."""
-    raise NotImplementedError(
-        "Completen escanear_temperaturas antes de ejecutar el programa."
-    )
+    consulta = pl.scan_csv(ruta)
+    return consulta
