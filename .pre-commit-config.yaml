@@ -44,3 +44,12 @@ repos:
         args: [--fix]
       # Run the formatter.
       - id: ruff-format
+
+  - repo: local
+    hooks:
+      - id: pytest-lab4
+        name: pytest Lab4
+        entry: uv run --directory labs/Lab4 python scripts/run_tests_if_data.py
+        language: system
+        pass_filenames: false
+        files: ^labs/Lab4/
