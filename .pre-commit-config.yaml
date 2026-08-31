@@ -49,7 +49,7 @@ repos:
     hooks:
       - id: pytest-lab4
         name: pytest Lab4
-        entry: uv run --directory labs/Lab4 pytest
+        entry: uv run --directory labs/Lab4 python scripts/run_tests_if_data.py
         language: system
         pass_filenames: false
         files: ^labs/Lab4/
