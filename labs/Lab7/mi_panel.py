@@ -19,6 +19,7 @@ así que el navegador se actualiza solo al guardar.
 
 from pathlib import Path
 
+import plotly.express as px
 import polars as pl
 import streamlit as st
 
@@ -44,11 +45,6 @@ def cargar_datos() -> pl.DataFrame:
 
 df = cargar_datos()
 
-raise NotImplementedError(
-    "Completen las cuatro secciones de este archivo y borren esta línea "
-    "antes de ejecutar el programa."
-)
-
 # --- 1) La tabla interactiva -----------------------------------------------
 #
 # Una tabla con el dataset que el lector pueda ordenar por cualquier columna y
@@ -67,7 +63,54 @@ raise NotImplementedError(
 #   https://docs.streamlit.io/develop/api-reference/widgets/st.multiselect
 #   https://docs.streamlit.io/develop/api-reference/widgets/st.slider
 
-# Su código aquí
+especies_disponibles = sorted(df["species"].drop_nulls().unique().to_list())
+masa_minima = int(df["body_mass_g"].drop_nulls().min())
+masa_maxima = int(df["body_mass_g"].drop_nulls().max())
+
+especies_seleccionadas = st.sidebar.multiselect(
+    "Especie", options=especies_disponibles, default=especies_disponibles
+)
+rango_masa = st.sidebar.slider(
+    "Masa corporal (g)",
+    min_value=masa_minima,
+    max_value=masa_maxima,
+    value=(masa_minima, masa_maxima),
+    step=100,
+)
+
+df_filtrado = df.filter(
+    pl.col("species").is_in(especies_seleccionadas),
+    pl.col("body_mass_g").is_between(
+        rango_masa[0], rango_masa[1], closed="both"
+    ),
+)
+
+st.subheader("Datos de pingüinos")
+if df_filtrado.is_empty():
+    st.warning("No hay pingüinos que cumplan los filtros seleccionados.")
+else:
+    st.dataframe(
+        df_filtrado,
+        column_config={
+            "species": st.column_config.TextColumn("Especie"),
+            "island": st.column_config.TextColumn("Isla"),
+            "culmen_length_mm": st.column_config.NumberColumn(
+                "Largo del pico (mm)", format="%.1f"
+            ),
+            "culmen_depth_mm": st.column_config.NumberColumn(
+                "Alto del pico (mm)", format="%.1f"
+            ),
+            "flipper_length_mm": st.column_config.NumberColumn(
+                "Largo de aleta (mm)", format="%d"
+            ),
+            "body_mass_g": st.column_config.NumberColumn(
+                "Masa corporal (g)", format="%d"
+            ),
+            "sex": st.column_config.TextColumn("Sexo"),
+        },
+        hide_index=True,
+        width="stretch",
+    )
 
 
 # --- 2) La calidad de los datos --------------------------------------------
@@ -82,7 +125,35 @@ raise NotImplementedError(
 #
 #   https://docs.streamlit.io/develop/api-reference/status/st.warning
 
-# Su código aquí
+conteo_nulos = df.null_count().row(0, named=True)
+nulos_por_columna = {
+    columna: int(cantidad)
+    for columna, cantidad in conteo_nulos.items()
+    if cantidad > 0
+}
+puntos_en_sex = df.filter(pl.col("sex") == ".").height
+
+st.subheader("Calidad de los datos")
+if nulos_por_columna:
+    st.dataframe(
+        pl.DataFrame(
+            {
+                "Columna": list(nulos_por_columna),
+                "Valores nulos": list(nulos_por_columna.values()),
+            }
+        ),
+        hide_index=True,
+        width="stretch",
+    )
+else:
+    st.success("El CSV no contiene valores nulos.")
+st.warning(f"El valor inesperado sex='.' aparece {puntos_en_sex} vez.")
+st.caption(
+    "Los nulos reducen los recuentos y los gráficos que requieren esas "
+    "mediciones; el filtro de masa excluye filas sin masa registrada. "
+    "El punto se cuenta como una categoría de sexo y puede alterar sus "
+    "recuentos o filtros. Este informe siempre usa el CSV completo."
+)
 
 
 # --- 3) Los cuatro gráficos ------------------------------------------------
@@ -99,7 +170,84 @@ raise NotImplementedError(
 #   https://docs.streamlit.io/develop/api-reference/text/st.caption
 #   https://docs.streamlit.io/develop/api-reference/layout/st.columns
 
-# Su código aquí
+if not df_filtrado.is_empty():
+    columna_1, columna_2 = st.columns(2)
+    with columna_1:
+        st.caption(
+            "La relación entre aleta y masa permite explorar cómo cambian "
+            "dos medidas; el color separa las especies."
+        )
+        fig_aleta_masa = px.scatter(
+            df_filtrado,
+            x="flipper_length_mm",
+            y="body_mass_g",
+            color="species",
+            labels={
+                "flipper_length_mm": "Largo de aleta (mm)",
+                "body_mass_g": "Masa corporal (g)",
+                "species": "Especie",
+            },
+        )
+        st.plotly_chart(fig_aleta_masa, width="stretch")
+
+    with columna_2:
+        st.caption(
+            "El histograma compara la distribución de masa entre especies; "
+            "la superposición permite ver los rangos compartidos."
+        )
+        fig_distribucion = px.histogram(
+            df_filtrado,
+            x="body_mass_g",
+            color="species",
+            barmode="overlay",
+            opacity=0.6,
+            labels={
+                "body_mass_g": "Masa corporal (g)",
+                "species": "Especie",
+                "count": "Pingüinos",
+            },
+        )
+        st.plotly_chart(fig_distribucion, width="stretch")
+
+    columna_3, columna_4 = st.columns(2)
+    with columna_3:
+        st.caption(
+            "Las cajas comparan mediana, cuartiles y posibles valores "
+            "extremos de masa por especie."
+        )
+        fig_cajas = px.box(
+            df_filtrado,
+            x="species",
+            y="body_mass_g",
+            color="species",
+            labels={
+                "species": "Especie",
+                "body_mass_g": "Masa corporal (g)",
+            },
+        )
+        st.plotly_chart(fig_cajas, width="stretch")
+
+    with columna_4:
+        st.caption(
+            "Las barras comparan cuántos pingüinos de cada especie hay "
+            "en cada isla dentro de la selección."
+        )
+        conteos = df_filtrado.group_by(["species", "island"]).len(
+            name="pingüinos"
+        )
+        fig_conteos = px.bar(
+            conteos,
+            x="species",
+            y="pingüinos",
+            color="island",
+            barmode="group",
+            labels={
+                "species": "Especie",
+                "island": "Isla",
+                "pingüinos": "Cantidad de pingüinos",
+            },
+        )
+        st.plotly_chart(fig_conteos, width="stretch")
 
 
 # --- 4) El tema --------------------------------------------------------------
