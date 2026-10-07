@@ -2,6 +2,14 @@
 
 import polars as pl
 
+OBJETIVOS = (
+    "Dry_Green_g",
+    "Dry_Dead_g",
+    "Dry_Clover_g",
+    "GDM_g",
+    "Dry_Total_g",
+)
+
 
 def a_formato_ancho(df_largo: pl.DataFrame) -> pl.DataFrame:
     """Pivotea la tabla de mediciones de formato largo a ancho.
@@ -13,6 +21,13 @@ def a_formato_ancho(df_largo: pl.DataFrame) -> pl.DataFrame:
     trae una fila por imagen, con una columna por cada nombre de
     `OBJETIVOS` y los metadatos conservados sin duplicar.
     """
-    raise NotImplementedError(
-        "Completen a_formato_ancho antes de ejecutar el programa."
+    df_ancho = df_largo.pivot(
+        on="target_name",
+        index=[
+            col
+            for col in df_largo.columns
+            if col not in ("sample_id", "target_name", "target")
+        ],
+        values="target",
     )
+    return df_ancho
