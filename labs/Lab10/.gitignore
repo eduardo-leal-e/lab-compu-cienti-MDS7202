@@ -1,0 +1,24 @@
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+mlflow.db
+mlruns/
+data/processed/*
+!data/processed/.gitignore
+reports/figures/*
+!reports/figures/.gitignore
+
+# Archivos temporales
+.pytest_cache/
+.pytest-run/
+.pytest-tmp/
+tmp*/
+
+# Archivos de Python
+__pycache__/
+*.pyc
+
+# Reportes temporales
+reports/_review_runtime/
