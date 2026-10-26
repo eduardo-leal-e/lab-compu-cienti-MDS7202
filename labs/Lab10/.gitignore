@@ -9,3 +9,16 @@ data/processed/*
 !data/processed/.gitignore
 reports/figures/*
 !reports/figures/.gitignore
+
+# Archivos temporales
+.pytest_cache/
+.pytest-run/
+.pytest-tmp/
+tmp*/
+
+# Archivos de Python
+__pycache__/
+*.pyc
+
+# Reportes temporales
+reports/_review_runtime/
