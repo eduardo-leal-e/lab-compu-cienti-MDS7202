@@ -24,9 +24,15 @@ def suggest_params(trial: optuna.Trial) -> dict:
     al construir las variables y se mantienen fijas para que la comparación
     entre trials sea justa.
     """
-    raise NotImplementedError(
-        "Completen suggest_params antes de ejecutar esta celda."
-    )
+    return {
+        "num_leaves": trial.suggest_int("num_leaves", 8, 64, log=True),
+        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.2, log=True),
+        "n_estimators": trial.suggest_int("n_estimators", 100, 600, step=50),
+        "min_child_samples": trial.suggest_int("min_child_samples", 10, 100),
+        "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+        "reg_lambda": trial.suggest_float("reg_lambda", 1e-3, 10.0, log=True),
+    }
 
 
 def objective(
@@ -43,9 +49,9 @@ def objective(
     predicciones fuera de fold juntas: un fold con más horas aporta más filas
     al promedio, sin que haya que ponderar nada a mano.
     """
-    raise NotImplementedError(
-        "Completen objective antes de ejecutar esta celda."
-    )
+    from .backtest import mae, make_model, walk_forward
+    resultados = walk_forward(X, y, make_model(**suggest_params(trial)), folds)
+    return mae(resultados["real"], resultados["pronostico"])
 
 
 def tune_model(
@@ -56,6 +62,8 @@ def tune_model(
     seed: int = 42,
 ) -> optuna.Study:
     """Crea y ejecuta un estudio Optuna que minimiza el MAE fuera de fold."""
-    raise NotImplementedError(
-        "Completen tune_model antes de ejecutar esta celda."
-    )
+    if n_trials < 1:
+        raise ValueError("n_trials debe ser positivo")
+    estudio = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
+    estudio.optimize(lambda trial: objective(trial, X, y, folds), n_trials=n_trials)
+    return estudio
