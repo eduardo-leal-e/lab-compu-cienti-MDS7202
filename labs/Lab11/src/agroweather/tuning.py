@@ -26,7 +26,9 @@ def suggest_params(trial: optuna.Trial) -> dict:
     """
     return {
         "num_leaves": trial.suggest_int("num_leaves", 8, 64, log=True),
-        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.2, log=True),
+        "learning_rate": trial.suggest_float(
+            "learning_rate", 0.01, 0.2, log=True
+        ),
         "n_estimators": trial.suggest_int("n_estimators", 100, 600, step=50),
         "min_child_samples": trial.suggest_int("min_child_samples", 10, 100),
         "subsample": trial.suggest_float("subsample", 0.6, 1.0),
@@ -50,6 +52,7 @@ def objective(
     al promedio, sin que haya que ponderar nada a mano.
     """
     from .backtest import mae, make_model, walk_forward
+
     resultados = walk_forward(X, y, make_model(**suggest_params(trial)), folds)
     return mae(resultados["real"], resultados["pronostico"])
 
@@ -64,6 +67,10 @@ def tune_model(
     """Crea y ejecuta un estudio Optuna que minimiza el MAE fuera de fold."""
     if n_trials < 1:
         raise ValueError("n_trials debe ser positivo")
-    estudio = optuna.create_study(direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed))
-    estudio.optimize(lambda trial: objective(trial, X, y, folds), n_trials=n_trials)
+    estudio = optuna.create_study(
+        direction="minimize", sampler=optuna.samplers.TPESampler(seed=seed)
+    )
+    estudio.optimize(
+        lambda trial: objective(trial, X, y, folds), n_trials=n_trials
+    )
     return estudio
