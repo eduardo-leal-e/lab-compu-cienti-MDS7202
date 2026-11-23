@@ -25,8 +25,11 @@ class Settings(BaseSettings):
 
     # Su código aquí: declaren `model_config` y los cuatro campos de la tabla.
     model_config = SettingsConfigDict(
-        env_prefix="APR_", env_file=".env", env_file_encoding="utf-8",
-        env_ignore_empty=True, extra="ignore"
+        env_prefix="APR_",
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_ignore_empty=True,
+        extra="ignore",
     )
 
     api_key: SecretStr

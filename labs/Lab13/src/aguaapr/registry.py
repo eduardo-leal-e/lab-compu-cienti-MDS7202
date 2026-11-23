@@ -21,7 +21,9 @@ def cargar_modelo(directorio: Path) -> tuple[Pipeline, dict[str, Any]]:
     """
     metadata = leer_metadata(directorio)
     if metadata.get("features") != FEATURES:
-        raise ErrorArtefacto("Las variables del artefacto no coinciden con el contrato.")
+        raise ErrorArtefacto(
+            "Las variables del artefacto no coinciden con el contrato."
+        )
     if metadata.get("sklearn_version") != sklearn.__version__:
         raise ErrorArtefacto(
             f"La versi\u00f3n de scikit-learn del artefacto ({metadata.get('sklearn_version')}) "

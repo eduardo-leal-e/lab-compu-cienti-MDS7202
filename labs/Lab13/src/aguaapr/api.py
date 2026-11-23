@@ -35,12 +35,16 @@ def crear_router_inferencia(servicios: Servicios) -> APIRouter:
     def health():
         return {"estado": "ok"}
 
-    @router.post("/predict", response_model=RespuestaPrediccion,
-                 dependencies=[Depends(crear_dependencia_clave(servicios))])
+    @router.post(
+        "/predict",
+        response_model=RespuestaPrediccion,
+        dependencies=[Depends(crear_dependencia_clave(servicios))],
+    )
     def predict(medicion: MedicionAgua):
         clases, probabilidades = predecir(servicios.modelo, a_tabla([medicion]))
         return RespuestaPrediccion(
-            prediccion=int(clases[0]), probabilidad=round(float(probabilidades[0]), 4)
+            prediccion=int(clases[0]),
+            probabilidad=round(float(probabilidades[0]), 4),
         )
 
     return router
